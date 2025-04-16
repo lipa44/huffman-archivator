@@ -1,18 +1,8 @@
 namespace Archivator;
 
-using System.Collections.Generic;
-using System.IO;
-
 public class HuffmanDecoder
 {
-    private class HuffmanNode
-    {
-        public ushort? Symbol;
-        public int Frequency;
-        public HuffmanNode Left, Right;
-    }
-
-    public void Decode(string inputPath, string outputPath)
+    public async Task Decode(string inputPath, string outputPath)
     {
         using var reader = new BinaryReader(File.OpenRead(inputPath));
         var frequencyTable = ReadFrequencyTable(reader);
@@ -21,13 +11,14 @@ public class HuffmanDecoder
 
         var root = BuildHuffmanTree(frequencyTable);
         var decoded = DecodeData(compressedData, root, frequencyTable);
-        File.WriteAllBytes(outputPath, decoded);
+        await File.WriteAllBytesAsync(outputPath, decoded);
     }
 
     private Dictionary<ushort, int> ReadFrequencyTable(BinaryReader reader)
     {
         var count = reader.ReadInt32();
         var table = new Dictionary<ushort, int>();
+
         for (var i = 0; i < count; i++)
         {
             var key = reader.ReadUInt16();
@@ -41,6 +32,7 @@ public class HuffmanDecoder
     private HuffmanNode BuildHuffmanTree(Dictionary<ushort, int> freq)
     {
         var pq = new PriorityQueue<HuffmanNode, int>();
+
         foreach (var kvp in freq)
         {
             pq.Enqueue(new HuffmanNode { Symbol = kvp.Key, Frequency = kvp.Value }, kvp.Value);
@@ -74,23 +66,31 @@ public class HuffmanDecoder
             for (var i = 7; i >= 0; i--)
             {
                 var bit = (b & (1 << i)) != 0;
-                current = bit ? current.Right : current.Left;
+                current = bit ? current?.Right : current?.Left;
 
-                if (current.Symbol.HasValue)
-                {
-                    var pair = current.Symbol.Value;
-                    var high = (byte) (pair >> 8);
-                    var low = (byte) (pair & 0xFF);
-                    output.Add(high);
-                    output.Add(low);
-                    current = root;
-                    symbolsDecoded++;
-                    if (symbolsDecoded >= totalSymbols)
-                        return output.ToArray();
-                }
+                if (current?.Symbol is not { } symbol) { continue; }
+
+                var pair = symbol;
+                var high = (byte) (pair >> 8);
+                var low = (byte) (pair & 0xFF);
+                output.Add(high);
+                output.Add(low);
+                current = root;
+                symbolsDecoded++;
+
+                if (symbolsDecoded >= totalSymbols)
+                    return output.ToArray();
             }
         }
 
         return output.ToArray();
+    }
+
+    private record HuffmanNode
+    {
+        public HuffmanNode? Left { get; init; }
+        public HuffmanNode? Right { get; init; }
+        public int Frequency { get; init; }
+        public ushort? Symbol { get; init; }
     }
 }

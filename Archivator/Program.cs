@@ -1,23 +1,27 @@
 ﻿using System.Diagnostics;
 using Archivator;
 
-const string basePath = "./TestData/";
+const string basePath = "./../../../TestData/";
 var files = Directory.EnumerateFiles(basePath);
 
 var sw = new Stopwatch();
 sw.Start();
-foreach (var file in files.Where(x => x.Contains(".after") is false && x.Contains(".huffman") is false))
-{
-    var huffmanFile = file + ".huffman";
 
-    var encoder = new HuffmanEncoder();
-    encoder.Encode(file, huffmanFile);
+await Parallel.ForEachAsync(
+    files.Where(x => x.Contains(".after") is false && x.Contains(".huffman") is false),
+    async (file, _) =>
+    {
+        var huffmanFile = file + ".huffman";
 
-    var decoder = new HuffmanDecoder();
-    decoder.Decode(huffmanFile, file + ".after");
+        var encoder = new HuffmanEncoder();
+        await encoder.Encode(file, huffmanFile);
 
-    File.Delete(huffmanFile);
-}
+        var decoder = new HuffmanDecoder();
+        await decoder.Decode(huffmanFile, file + ".after");
+
+        File.Delete(huffmanFile);
+    }
+);
 
 var elapsed = sw.Elapsed;
 Console.WriteLine($"Elapsed time: {elapsed.TotalMilliseconds}ms");
