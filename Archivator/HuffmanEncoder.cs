@@ -5,6 +5,8 @@ using System.Text;
 public class HuffmanEncoder
 {
     private const int BlockSize = 2;
+    private const int BitsInByte = 8;
+    private const byte FillerByte = 0x00;
 
     public async Task Encode(string inputPath, string outputPath)
     {
@@ -14,19 +16,13 @@ public class HuffmanEncoder
         var root = BuildHuffmanTree(frequencyTable);
         var huffmanCodes = BuildHuffmanCodes(root);
 
-        var encodedData = EncodeData(inputData, huffmanCodes);
-        var compressedData = ConvertBitStringToByteArray(encodedData);
+        var encodedBits = EncodeData(inputData, huffmanCodes);
+        var compressedData = ConvertBitStringToByteArray(encodedBits);
 
-        await using (var fs = new BinaryWriter(File.Open(outputPath, FileMode.Create)))
-        {
-            WriteFrequencyTable(fs, frequencyTable);
-            fs.Write(inputData.Length);
-            fs.Write(compressedData.Length);
-            fs.Write(compressedData);
-        }
+        WriteArchive(outputPath, frequencyTable, inputData.Length, compressedData);
 
-        var metrics = CalcCompressionMetrics(inputData, frequencyTable, encodedData.Length);
-        PrintCompressionMetrics(inputPath, metrics);
+        var metrics = CalculateMetrics(inputData, frequencyTable, encodedBits.Length);
+        PrintMetrics(inputPath, metrics);
     }
 
     private static Dictionary<ushort, int> BuildFrequencyTable(byte[] data)
@@ -37,7 +33,7 @@ public class HuffmanEncoder
 
         for (i = 0; i + 1 < data.Length; i += BlockSize)
         {
-            var pair = (ushort) ((data[i] << 8) | data[i + 1]);
+            var pair = (ushort) ((data[i] << BitsInByte) | data[i + 1]);
             dict.TryAdd(pair, 0);
             dict[pair]++;
         }
@@ -45,7 +41,7 @@ public class HuffmanEncoder
         if (i >= data.Length) return dict;
 
         // Обработка последнего байта (если нечётная длина)
-        var lastPair = (ushort) ((data[i] << 8) | 0x00); // добавляем фиктивный 0
+        var lastPair = (ushort) ((data[i] << BitsInByte) | FillerByte); // добавляем фиктивный 0
         dict.TryAdd(lastPair, 0);
         dict[lastPair]++;
 
@@ -56,22 +52,17 @@ public class HuffmanEncoder
     {
         var pq = new PriorityQueue<HuffmanNode, int>();
 
-        foreach (var kvp in freq)
+        foreach (var (symbol, frequency) in freq)
         {
-            pq.Enqueue(new HuffmanNode { Symbol = kvp.Key, Frequency = kvp.Value }, kvp.Value);
+            pq.Enqueue(new HuffmanNode(symbol, frequency), frequency);
         }
 
         while (pq.Count > 1)
         {
-            var left = pq.Dequeue();
-            var right = pq.Dequeue();
-            var parent = new HuffmanNode
-            {
-                Frequency = left.Frequency + right.Frequency,
-                Left = left,
-                Right = right
-            };
-            pq.Enqueue(parent, parent.Frequency);
+            HuffmanNode left = pq.Dequeue(), right = pq.Dequeue();
+            var parent = new HuffmanNode(null, left.Frequency + right.Frequency, left, right);
+
+            pq.Enqueue(parent, left.Frequency + right.Frequency);
         }
 
         return pq.Dequeue();
@@ -80,35 +71,41 @@ public class HuffmanEncoder
     private static Dictionary<ushort, string> BuildHuffmanCodes(HuffmanNode root)
     {
         var dict = new Dictionary<ushort, string>();
+        var sb = new StringBuilder();
 
-        void Traverse(HuffmanNode node, string code)
+        void Traverse(HuffmanNode node)
         {
             if (node.Symbol.HasValue)
             {
-                dict[node.Symbol.Value] = code;
+                dict[node.Symbol.Value] = sb.ToString();
+
+                return;
             }
-            else
-            {
-                Traverse(node.Left, code + "0");
-                Traverse(node.Right, code + "1");
-            }
+
+            sb.Append('0');
+            Traverse(node.Left!);
+            sb.Length--;
+
+            sb.Append('1');
+            Traverse(node.Right!);
+            sb.Length--;
         }
 
-        Traverse(root, string.Empty);
+        Traverse(root);
 
         return dict;
     }
 
     private static string EncodeData(byte[] data, Dictionary<ushort, string> codes)
     {
-        StringBuilder sb = new();
+        var sb = new StringBuilder();
 
         for (var i = 0; i < data.Length; i += BlockSize)
         {
             var first = data[i];
-            var second = i + 1 < data.Length ? data[i + 1] : (byte) 0;
+            var second = i + 1 < data.Length ? data[i + 1] : FillerByte;
 
-            var pair = (ushort) ((first << 8) | second);
+            var pair = (ushort) ((first << BitsInByte) | second);
             sb.Append(codes[pair]);
         }
 
@@ -117,36 +114,43 @@ public class HuffmanEncoder
 
     private static byte[] ConvertBitStringToByteArray(string bits)
     {
-        var numBytes = (bits.Length + 7) / 8;
+        var numBytes = (bits.Length + 7) / BitsInByte;
         var result = new byte[numBytes];
 
         for (var i = 0; i < bits.Length; i++)
         {
             if (bits[i] == '1')
             {
-                result[i / 8] |= (byte) (1 << (7 - (i % 8)));
+                result[i / BitsInByte] |= (byte) (1 << (BitsInByte - 1 - (i % BitsInByte)));
             }
         }
 
         return result;
     }
 
-    private static void WriteFrequencyTable(BinaryWriter writer, Dictionary<ushort, int> freq)
+    private static void WriteArchive(
+        string path,
+        Dictionary<ushort, int> freq,
+        int originalLength,
+        byte[] compressedData
+    )
     {
+        using var writer = new BinaryWriter(File.Open(path, FileMode.Create));
+
         writer.Write(freq.Count);
 
-        foreach (var kvp in freq)
+        foreach (var (key, value) in freq)
         {
-            writer.Write(kvp.Key);
-            writer.Write(kvp.Value);
+            writer.Write(key);
+            writer.Write(value);
         }
+
+        writer.Write(originalLength);
+        writer.Write(compressedData.Length);
+        writer.Write(compressedData);
     }
 
-    private static CompressionMetrics CalcCompressionMetrics(
-        byte[] data,
-        Dictionary<ushort, int> freq,
-        int totalEncodedBits
-    )
+    private static CompressionMetrics CalculateMetrics(byte[] data, Dictionary<ushort, int> freq, int totalEncodedBits)
     {
         var totalPairs = freq.Values.Sum();
         var hx = -freq.Values.Sum(
@@ -160,10 +164,10 @@ public class HuffmanEncoder
 
         var singleByteFreq = new Dictionary<byte, int>();
 
-        foreach (var t in data)
+        foreach (var @byte in data)
         {
-            singleByteFreq.TryAdd(t, 0);
-            singleByteFreq[t]++;
+            singleByteFreq.TryAdd(@byte, 0);
+            singleByteFreq[@byte]++;
         }
 
         var totalBytes = data.Length;
@@ -176,42 +180,51 @@ public class HuffmanEncoder
             }
         );
 
-        var metrics = new CompressionMetrics
+        return new CompressionMetrics
         {
             H1 = h1,
             Hx = hx,
             AvgBitsPerSymbol = (double) totalEncodedBits / totalBytes,
             InitialSizeBytes = totalBytes,
-            CompressedSizeBytes = (totalEncodedBits + 7) / 8
+            CompressedSizeBytes = (totalEncodedBits + 7) / BitsInByte
         };
-
-        return metrics;
     }
 
-    private static void PrintCompressionMetrics(string inputFile, CompressionMetrics metrics)
+    private static void PrintMetrics(string inputFile, CompressionMetrics metrics)
     {
+        const int leftOffset = 25;
+        const int rightOffset = 10;
+        const string floatFormat = "F2";
+
+        string FormatNumber(int number)
+        {
+            if (number >= 1_000_000_000) return (number / 1_000_000_000D).ToString("0.0c") + "B";
+            if (number >= 1_000_000) return (number / 1_000_000D).ToString("0.00") + "M";
+            if (number >= 1_000) return (number / 1_000D).ToString("0.00") + "K";
+
+            return number.ToString();
+        }
+
+        string Line(char left, char mid, char right, char fill) =>
+            $"{left}{new string(fill, leftOffset + 1)}{mid}{new string(fill, rightOffset + 1)}{right}";
+
+        string Row(string key, string value) => $"│ {key,-leftOffset}│{value,rightOffset} │";
+
         Console.WriteLine($"\nFile: {inputFile}");
-        Console.WriteLine(new string('-', 55));
-        Console.WriteLine($"{"Metric",-30}{"Value",25}");
-        Console.WriteLine(new string('-', 55));
-        Console.WriteLine($"{"Entropy H(X):",-30}{metrics.H1,25:F6}");
-        Console.WriteLine($"{"Entropy H(XX):",-30}{metrics.Hx,25:F6}");
-        Console.WriteLine($"{"Entropy H(X|X):",-30}{metrics.ConditionalEntropy,25:F6}");
-        Console.WriteLine($"{"Avg bits/symbol:",-30}{metrics.AvgBitsPerSymbol,25:F6}");
-        Console.WriteLine($"{"Initial size (bytes):",-30}{metrics.InitialSizeBytes,25}");
-        Console.WriteLine($"{"Compressed size (bytes):",-30}{metrics.CompressedSizeBytes,25}");
-        Console.WriteLine(new string('-', 55));
-        Console.WriteLine($"{"Compressed (%):",-30}{metrics.CompressionRatioPercent,25:.00}");
-        Console.WriteLine(new string('-', 55));
+        Console.WriteLine(Line('┌', '┬', '┐', '─'));
+        Console.WriteLine(Row("Entropy H(X)", metrics.H1.ToString(floatFormat)));
+        Console.WriteLine(Row("Entropy H(XX)", metrics.Hx.ToString(floatFormat)));
+        Console.WriteLine(Row("Entropy H(X|X)", metrics.ConditionalEntropy.ToString(floatFormat)));
+        Console.WriteLine(Row("Avg bits/symbol", metrics.AvgBitsPerSymbol.ToString(floatFormat)));
+        Console.WriteLine(Line('├', '┼', '┤', '─'));
+        Console.WriteLine(Row("Initial size (bytes)", FormatNumber(metrics.InitialSizeBytes)));
+        Console.WriteLine(Row("Compressed size (bytes)", FormatNumber(metrics.CompressedSizeBytes)));
+        Console.WriteLine(Line('├', '┼', '┤', '─'));
+        Console.WriteLine(Row("Compressed (%)", metrics.CompressionRatioPercent.ToString(floatFormat)));
+        Console.WriteLine(Line('└', '┴', '┘', '─'));
     }
 
-    public record HuffmanNode
-    {
-        public HuffmanNode? Left { get; init; }
-        public HuffmanNode? Right { get; init; }
-        public int Frequency { get; init; }
-        public ushort? Symbol { get; init; }
-    }
+    public record HuffmanNode(ushort? Symbol, int Frequency, HuffmanNode? Left = null, HuffmanNode? Right = null);
 
     private record CompressionMetrics
     {

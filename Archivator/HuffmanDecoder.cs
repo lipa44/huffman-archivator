@@ -2,6 +2,9 @@ namespace Archivator;
 
 public class HuffmanDecoder
 {
+    private const int BitsInByte = 8;
+    private const byte ByteMask = 0xFF;
+
     public async Task Decode(string inputPath, string outputPath)
     {
         using var reader = new BinaryReader(File.OpenRead(inputPath));
@@ -21,18 +24,13 @@ public class HuffmanDecoder
         var originalByteLength = reader.ReadInt32();
         var compressedDataLength = reader.ReadInt32();
 
-        return new ArchiveMetadata
-        {
-            FrequencyTable = frequencyTable,
-            OriginalByteLength = originalByteLength,
-            CompressedDataLength = compressedDataLength
-        };
+        return new ArchiveMetadata(frequencyTable, originalByteLength, compressedDataLength);
     }
 
     private Dictionary<ushort, int> ReadFrequencyTable(BinaryReader reader)
     {
         var count = reader.ReadInt32();
-        var table = new Dictionary<ushort, int>();
+        var table = new Dictionary<ushort, int>(count);
 
         for (var i = 0; i < count; i++)
         {
@@ -48,20 +46,15 @@ public class HuffmanDecoder
     {
         var pq = new PriorityQueue<HuffmanNode, int>();
 
-        foreach (var kvp in freq)
+        foreach (var (symbol, frequency) in freq)
         {
-            pq.Enqueue(new HuffmanNode { Symbol = kvp.Key, Frequency = kvp.Value }, kvp.Value);
+            pq.Enqueue(new HuffmanNode(symbol, frequency), frequency);
         }
 
         while (pq.Count > 1)
         {
             HuffmanNode left = pq.Dequeue(), right = pq.Dequeue();
-            var parent = new HuffmanNode
-            {
-                Left = left,
-                Right = right,
-                Frequency = left.Frequency + right.Frequency
-            };
+            var parent = new HuffmanNode(null, left.Frequency + right.Frequency, left, right);
 
             pq.Enqueue(parent, parent.Frequency);
         }
@@ -77,40 +70,37 @@ public class HuffmanDecoder
 
         foreach (var b in compressedData)
         {
-            for (var i = 7; i >= 0; i--)
+            for (var i = BitsInByte - 1; i >= 0; i--)
             {
                 var bit = (b & (1 << i)) != 0;
                 current = bit ? current?.Right : current?.Left;
 
                 if (current?.Symbol is not { } symbol) continue;
 
-                var high = (byte) (symbol >> 8);
-                var low = (byte) (symbol & 0xFF);
-
-                if (bytesWritten < originalByteLength) output[bytesWritten++] = high;
-                if (bytesWritten < originalByteLength) output[bytesWritten++] = low;
-
+                WriteSymbolBytes(output, symbol, ref bytesWritten, originalByteLength);
                 current = root;
 
-                if (bytesWritten >= originalByteLength) break;
+                if (bytesWritten >= originalByteLength) return output;
             }
         }
 
         return output;
     }
 
-    private record HuffmanNode
+    private static void WriteSymbolBytes(byte[] output, ushort symbol, ref int offset, int limit)
     {
-        public HuffmanNode? Left { get; init; }
-        public HuffmanNode? Right { get; init; }
-        public int Frequency { get; init; }
-        public ushort? Symbol { get; init; }
+        var high = (byte) (symbol >> BitsInByte);
+        var low = (byte) (symbol & ByteMask);
+
+        if (offset < limit) output[offset++] = high;
+        if (offset < limit) output[offset++] = low;
     }
 
-    private record ArchiveMetadata
-    {
-        public Dictionary<ushort, int> FrequencyTable { get; init; }
-        public int OriginalByteLength { get; init; }
-        public int CompressedDataLength { get; init; }
-    }
+    private record HuffmanNode(ushort? Symbol, int Frequency, HuffmanNode? Left = null, HuffmanNode? Right = null);
+
+    private record ArchiveMetadata(
+        Dictionary<ushort, int> FrequencyTable,
+        int OriginalByteLength,
+        int CompressedDataLength
+    );
 }
