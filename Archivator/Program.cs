@@ -24,4 +24,4 @@ await Parallel.ForEachAsync(
 );
 
 var elapsed = sw.Elapsed;
-Console.WriteLine($"Elapsed time: {elapsed.TotalMilliseconds}ms");
+Console.WriteLine($"Total elapsed time: {elapsed.TotalMilliseconds}ms");
