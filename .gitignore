@@ -7,6 +7,8 @@
 *.sln.docstates
 *.idea/**
 
+/Archivator/exec/**
+
 # Build results
 
 [Dd]ebug/
