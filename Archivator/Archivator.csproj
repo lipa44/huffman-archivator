@@ -5,12 +5,17 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
         <Content Include="TestData\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Humanizer" Version="2.14.1"/>
     </ItemGroup>
 
 </Project>

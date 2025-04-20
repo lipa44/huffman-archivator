@@ -1,6 +1,7 @@
 namespace Archivator;
 
 using System.Text;
+using Humanizer;
 
 public class HuffmanEncoder
 {
@@ -192,18 +193,9 @@ public class HuffmanEncoder
 
     private static void PrintMetrics(string inputFile, CompressionMetrics metrics)
     {
-        const int leftOffset = 25;
-        const int rightOffset = 10;
-        const string floatFormat = "F2";
-
-        string FormatNumber(int number)
-        {
-            if (number >= 1_000_000_000) return (number / 1_000_000_000D).ToString("0.0c") + "B";
-            if (number >= 1_000_000) return (number / 1_000_000D).ToString("0.00") + "M";
-            if (number >= 1_000) return (number / 1_000D).ToString("0.00") + "K";
-
-            return number.ToString();
-        }
+        const int leftOffset = 16;
+        const int rightOffset = 11;
+        const string floatFormat = "F3";
 
         string Line(char left, char mid, char right, char fill) =>
             $"{left}{new string(fill, leftOffset + 1)}{mid}{new string(fill, rightOffset + 1)}{right}";
@@ -217,8 +209,8 @@ public class HuffmanEncoder
         Console.WriteLine(Row("Entropy H(X|X)", metrics.ConditionalEntropy.ToString(floatFormat)));
         Console.WriteLine(Row("Avg bits/symbol", metrics.AvgBitsPerSymbol.ToString(floatFormat)));
         Console.WriteLine(Line('├', '┼', '┤', '─'));
-        Console.WriteLine(Row("Initial size (bytes)", FormatNumber(metrics.InitialSizeBytes)));
-        Console.WriteLine(Row("Compressed size (bytes)", FormatNumber(metrics.CompressedSizeBytes)));
+        Console.WriteLine(Row("Initial size", metrics.InitialSizeBytes.Bytes().ToString()));
+        Console.WriteLine(Row("Compressed size", metrics.CompressedSizeBytes.Bytes().ToString()));
         Console.WriteLine(Line('├', '┼', '┤', '─'));
         Console.WriteLine(Row("Compressed (%)", metrics.CompressionRatioPercent.ToString(floatFormat)));
         Console.WriteLine(Line('└', '┴', '┘', '─'));
