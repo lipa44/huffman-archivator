@@ -4,6 +4,43 @@
 
 Алгоритм: **Код Хаффмана двухпроходный, блоками по 2 символа**
 
+## Запуск .exe _(может не сработать)_
+
+```shell
+cd /exec
+```
+
+### Win-x64
+
+```shell
+./Archivator_win-x64 [encoder|decoder] [inputPath] [outputPath]
+```
+
+### Win-x86
+
+```shell
+./Archivator_win-x86 [encoder|decoder] [inputPath] [outputPath]
+```
+
+### Win-arm64
+
+```shell
+./Archivator_win-arc64 [encoder|decoder] [inputPath] [outputPath]
+```
+
+## Запуск c dotnet
+
+> Необходим установленный [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) на компьютере
+
+```shell
+dotnet build -c Release
+dotnet publish -c Release
+```
+
+```shell
+dotnet run --project Archivator [encoder|decoder] [inputPath] [outputPath]
+```
+
 ## Энкодер
 
 ### Этапы кодирования
@@ -63,291 +100,3 @@
 ## Результаты сжатия
 
 > Суммарное значение сжатого размера всех файлов: **1_545_175 байт**
-
-### bib
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,201 │
-│ Entropy H(X|X)  │      3,364 │
-│ Entropy H(X|XX) │      2,308 │
-│ Avg bits/symbol │      4,292 │
-├─────────────────┼────────────┤
-│ Initial size    │  108,65 KB │
-│ Compressed size │   58,29 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     46,350 │
-└─────────────────┴────────────┘
-```
-
-### book1
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,527 │
-│ Entropy H(X|X)  │      3,585 │
-│ Entropy H(X|XX) │      2,814 │
-│ Avg bits/symbol │      4,070 │
-├─────────────────┼────────────┤
-│ Initial size    │  750,75 KB │
-│ Compressed size │  381,99 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     49,119 │
-└─────────────────┴────────────┘
-```
-
-### book2
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,793 │
-│ Entropy H(X|X)  │      3,745 │
-│ Entropy H(X|XX) │      2,736 │
-│ Avg bits/symbol │      4,282 │
-├─────────────────┼────────────┤
-│ Initial size    │  596,54 KB │
-│ Compressed size │   319,3 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     46,474 │
-└─────────────────┴────────────┘
-```
-
-### geo
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,646 │
-│ Entropy H(X|X)  │      4,264 │
-│ Entropy H(X|XX) │      3,458 │
-│ Avg bits/symbol │      4,608 │
-├─────────────────┼────────────┤
-│ Initial size    │     100 KB │
-│ Compressed size │    57,6 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     42,396 │
-└─────────────────┴────────────┘
-```
-
-### news
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,190 │
-│ Entropy H(X|X)  │      4,092 │
-│ Entropy H(X|XX) │      2,923 │
-│ Avg bits/symbol │      4,650 │
-├─────────────────┼────────────┤
-│ Initial size    │  368,27 KB │
-│ Compressed size │  214,05 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     41,878 │
-└─────────────────┴────────────┘
-```
-
-### obj1
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,948 │
-│ Entropy H(X|X)  │      3,464 │
-│ Entropy H(X|XX) │      1,400 │
-│ Avg bits/symbol │      4,585 │
-├─────────────────┼────────────┤
-│ Initial size    │      21 KB │
-│ Compressed size │   12,04 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     42,685 │
-└─────────────────┴────────────┘
-```
-
-### obj2
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      6,260 │
-│ Entropy H(X|X)  │      3,870 │
-│ Entropy H(X|XX) │      2,265 │
-│ Avg bits/symbol │      4,465 │
-├─────────────────┼────────────┤
-│ Initial size    │  241,03 KB │
-│ Compressed size │  134,53 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     44,184 │
-└─────────────────┴────────────┘
-```
-
-### paper1
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,983 │
-│ Entropy H(X|X)  │      3,646 │
-│ Entropy H(X|XX) │      2,332 │
-│ Avg bits/symbol │      4,319 │
-├─────────────────┼────────────┤
-│ Initial size    │   51,92 KB │
-│ Compressed size │   28,02 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     46,019 │
-└─────────────────┴────────────┘
-```
-
-### paper2
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,601 │
-│ Entropy H(X|X)  │      3,522 │
-│ Entropy H(X|XX) │      2,514 │
-│ Avg bits/symbol │      4,064 │
-├─────────────────┼────────────┤
-│ Initial size    │   80,27 KB │
-│ Compressed size │   40,78 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     49,198 │
-└─────────────────┴────────────┘
-```
-
-### paper3
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,665 │
-│ Entropy H(X|X)  │      3,555 │
-│ Entropy H(X|XX) │      2,560 │
-│ Avg bits/symbol │      4,114 │
-├─────────────────┼────────────┤
-│ Initial size    │   45,44 KB │
-│ Compressed size │   23,37 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     48,569 │
-└─────────────────┴────────────┘
-```
-
-### paper4
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,700 │
-│ Entropy H(X|X)  │      3,477 │
-│ Entropy H(X|XX) │      2,205 │
-│ Avg bits/symbol │      4,065 │
-├─────────────────┼────────────┤
-│ Initial size    │   12,97 KB │
-│ Compressed size │    6,59 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     49,187 │
-└─────────────────┴────────────┘
-```
-
-### paper5
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,936 │
-│ Entropy H(X|X)  │      3,526 │
-│ Entropy H(X|XX) │      2,041 │
-│ Avg bits/symbol │      4,217 │
-├─────────────────┼────────────┤
-│ Initial size    │   11,67 KB │
-│ Compressed size │    6,15 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     47,281 │
-└─────────────────┴────────────┘
-```
-
-### paper6
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,010 │
-│ Entropy H(X|X)  │      3,611 │
-│ Entropy H(X|XX) │      2,251 │
-│ Avg bits/symbol │      4,307 │
-├─────────────────┼────────────┤
-│ Initial size    │   37,21 KB │
-│ Compressed size │   20,04 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     46,157 │
-└─────────────────┴────────────┘
-```
-
-### pic
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      1,210 │
-│ Entropy H(X|X)  │      0,824 │
-│ Entropy H(X|XX) │      0,705 │
-│ Avg bits/symbol │      1,193 │
-├─────────────────┼────────────┤
-│ Initial size    │  501,19 KB │
-│ Compressed size │   74,73 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     85,090 │
-└─────────────────┴────────────┘
-```
-
-### progc
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,199 │
-│ Entropy H(X|X)  │      3,603 │
-│ Entropy H(X|XX) │      2,134 │
-│ Avg bits/symbol │      4,400 │
-├─────────────────┼────────────┤
-│ Initial size    │   38,68 KB │
-│ Compressed size │   21,27 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     45,003 │
-└─────────────────┴────────────┘
-```
-
-### progl
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,770 │
-│ Entropy H(X|X)  │      3,212 │
-│ Entropy H(X|XX) │      2,044 │
-│ Avg bits/symbol │      4,001 │
-├─────────────────┼────────────┤
-│ Initial size    │   69,97 KB │
-│ Compressed size │   34,99 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     49,992 │
-└─────────────────┴────────────┘
-```
-
-### progp
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      4,869 │
-│ Entropy H(X|X)  │      3,188 │
-│ Entropy H(X|XX) │      1,755 │
-│ Avg bits/symbol │      4,028 │
-├─────────────────┼────────────┤
-│ Initial size    │   48,22 KB │
-│ Compressed size │   24,28 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     49,645 │
-└─────────────────┴────────────┘
-```
-
-### trans
-
-```
-┌─────────────────┬────────────┐
-│ Entropy H(X)    │      5,533 │
-│ Entropy H(X|X)  │      3,355 │
-│ Entropy H(X|XX) │      1,930 │
-│ Avg bits/symbol │      4,452 │
-├─────────────────┼────────────┤
-│ Initial size    │    91,5 KB │
-│ Compressed size │   50,92 KB │
-├─────────────────┼────────────┤
-│ Compressed (%)  │     44,346 │
-└─────────────────┴────────────┘
-```

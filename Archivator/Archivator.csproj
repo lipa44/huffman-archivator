@@ -5,7 +5,8 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <PublishAot>true</PublishAot>
+        <RuntimeIdentifiers>win-x64;win-x86;win-arm64;osx-arm64</RuntimeIdentifiers>
+        <UseRidGraph>true</UseRidGraph>
     </PropertyGroup>
 
     <ItemGroup>
