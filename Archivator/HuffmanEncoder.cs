@@ -20,7 +20,7 @@ public class HuffmanEncoder
         var encodedBits = EncodeData(inputData, huffmanCodes);
         var compressedData = ConvertBitStringToByteArray(encodedBits);
 
-        WriteArchive(outputPath, frequencyTable, inputData.Length, compressedData);
+        WriteEncodedFile(outputPath, frequencyTable, inputData.Length, compressedData);
 
         var metrics = CalculateMetrics(inputData, encodedBits.Length);
         PrintMetrics(inputPath, metrics);
@@ -129,14 +129,14 @@ public class HuffmanEncoder
         return result;
     }
 
-    private static void WriteArchive(
-        string path,
+    private static void WriteEncodedFile(
+        string outputPath,
         Dictionary<ushort, int> freq,
         int originalLength,
         byte[] compressedData
     )
     {
-        using var writer = new BinaryWriter(File.Open(path, FileMode.Create));
+        using var writer = new BinaryWriter(File.Open(outputPath, FileMode.Create));
 
         writer.Write(freq.Count);
 
@@ -149,6 +149,8 @@ public class HuffmanEncoder
         writer.Write(originalLength);
         writer.Write(compressedData.Length);
         writer.Write(compressedData);
+
+        Console.WriteLine($"Encoded file written to: {outputPath}");
     }
 
     private static CompressionMetrics CalculateMetrics(byte[] data, int totalEncodedBits)

@@ -15,7 +15,13 @@ public class HuffmanDecoder
         var root = BuildHuffmanTree(metadata.FrequencyTable);
         var decoded = DecodeData(compressedData, root, metadata.OriginalByteLength);
 
+        await WriteDecodedFile(outputPath, decoded);
+    }
+
+    private static async Task WriteDecodedFile(string outputPath, byte[] decoded)
+    {
         await File.WriteAllBytesAsync(outputPath, decoded);
+        Console.WriteLine($"Decoded file written to: {outputPath}");
     }
 
     private ArchiveMetadata ReadMetadata(BinaryReader reader)
