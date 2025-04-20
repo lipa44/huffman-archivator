@@ -4,41 +4,36 @@
 
 Алгоритм: **Код Хаффмана двухпроходный, блоками по 2 символа**
 
-## Запуск .exe _(может не сработать)_
-
-```shell
-cd /exec
-```
+## Запуск
 
 ### Win-x64
 
 ```shell
-./Archivator_win-x64 [encoder|decoder] [inputPath] [outputPath]
+cd /exec/win-x64
+```
+
+```shell
+./Archivator.exe [encoder|decoder] [inputPath] [outputPath]
 ```
 
 ### Win-x86
 
 ```shell
-./Archivator_win-x86 [encoder|decoder] [inputPath] [outputPath]
+cd /exec/win-x86
+```
+
+```shell
+./Archivator.exe [encoder|decoder] [inputPath] [outputPath]
 ```
 
 ### Win-arm64
 
 ```shell
-./Archivator_win-arm64 [encoder|decoder] [inputPath] [outputPath]
-```
-
-## Запуск c dotnet
-
-> Необходим установленный [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) на компьютере
-
-```shell
-dotnet build -c Release
-dotnet publish -c Release
+cd /exec/win-arm64
 ```
 
 ```shell
-dotnet run --project Archivator [encoder|decoder] [inputPath] [outputPath]
+./Archivator.exe [encoder|decoder] [inputPath] [outputPath]
 ```
 
 ## Энкодер
