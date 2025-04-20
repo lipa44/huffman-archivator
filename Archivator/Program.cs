@@ -1,9 +1,11 @@
 ﻿using System.Diagnostics;
 using Archivator;
 
-if (args.Length < 3 && args[0].Equals("TestData", StringComparison.InvariantCultureIgnoreCase) is false)
+if (args.Length < 3 ||
+    (args.Length == 1 && args[0].Equals("TestData", StringComparison.InvariantCultureIgnoreCase) is false)
+   )
 {
-    Console.WriteLine("Usage: encoder|decoder [inputPath] [outputPath]");
+    Console.WriteLine("Usage: [encoder|decoder] [inputPath] [outputPath]");
 
     return;
 }
@@ -53,7 +55,7 @@ switch (command.ToLower())
         }
     default:
         Console.WriteLine($"Unknown command: {command}");
-        Console.WriteLine("Usage: encoder|decoder [inputPath] [outputPath]");
+        Console.WriteLine("Usage: [encoder|decoder] [inputPath] [outputPath]");
 
         return;
 }

@@ -7,6 +7,14 @@ public class HuffmanDecoder
 
     public async Task Decode(string inputPath, string outputPath)
     {
+        var fileExists = File.Exists(inputPath);
+
+        if (fileExists is false)
+        {
+            Console.WriteLine($"Файл '{inputPath}' не удалось найти для декодирования");
+            return;
+        }
+
         using var reader = new BinaryReader(File.OpenRead(inputPath));
 
         var metadata = ReadMetadata(reader);

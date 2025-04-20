@@ -11,6 +11,14 @@ public class HuffmanEncoder
 
     public async Task Encode(string inputPath, string outputPath)
     {
+        var fileExists = File.Exists(inputPath);
+
+        if (fileExists is false)
+        {
+            Console.WriteLine($"Файл '{inputPath}' не удалось найти для кодирования");
+            return;
+        }
+
         var inputData = await File.ReadAllBytesAsync(inputPath);
 
         var frequencyTable = BuildFrequencyTable(inputData);
