@@ -6,31 +6,7 @@
 
 ## Запуск
 
-### Win-x64
-
-```shell
-cd /exec/win-x64
-```
-
-```shell
-./Archivator.exe [encoder|decoder] [inputPath] [outputPath]
-```
-
-### Win-x86
-
-```shell
-cd /exec/win-x86
-```
-
-```shell
-./Archivator.exe [encoder|decoder] [inputPath] [outputPath]
-```
-
-### Win-arm64
-
-```shell
-cd /exec/win-arm64
-```
+> Для запуска необходимо скачать `.exe`, соответствующий платформе запуска
 
 ```shell
 ./Archivator.exe [encoder|decoder] [inputPath] [outputPath]
