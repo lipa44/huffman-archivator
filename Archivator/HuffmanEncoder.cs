@@ -22,7 +22,7 @@ public class HuffmanEncoder
 
         WriteArchive(outputPath, frequencyTable, inputData.Length, compressedData);
 
-        var metrics = CalculateMetrics(inputData, frequencyTable, encodedBits.Length);
+        var metrics = CalculateMetrics(inputData, encodedBits.Length);
         PrintMetrics(inputPath, metrics);
     }
 
@@ -151,27 +151,51 @@ public class HuffmanEncoder
         writer.Write(compressedData);
     }
 
-    private static CompressionMetrics CalculateMetrics(byte[] data, Dictionary<ushort, int> freq, int totalEncodedBits)
+    private static CompressionMetrics CalculateMetrics(byte[] data, int totalEncodedBits)
     {
-        var totalPairs = freq.Values.Sum();
-        var hx = -freq.Values.Sum(
-            v =>
-            {
-                var p = (double) v / totalPairs;
-
-                return p * Math.Log2(p);
-            }
-        );
+        const int BitsInByte = 8;
 
         var singleByteFreq = new Dictionary<byte, int>();
+        var pairFreq = new Dictionary<byte, Dictionary<byte, int>>();
+        var tripleFreq = new Dictionary<(byte, byte), Dictionary<byte, int>>();
 
-        foreach (var @byte in data)
+        for (var i = 0; i < data.Length; i++)
         {
-            singleByteFreq.TryAdd(@byte, 0);
-            singleByteFreq[@byte]++;
+            var current = data[i];
+            singleByteFreq.TryAdd(current, 0);
+            singleByteFreq[current]++;
+
+            if (i >= 1)
+            {
+                var prev = data[i - 1];
+                if (!pairFreq.ContainsKey(prev))
+                    pairFreq[prev] = new Dictionary<byte, int>();
+
+                var dict = pairFreq[prev];
+                dict.TryAdd(current, 0);
+                dict[current]++;
+            }
+
+            if (i >= 2)
+            {
+                var prev1 = data[i - 2];
+                var prev2 = data[i - 1];
+                var key = (prev1, prev2);
+
+                if (!tripleFreq.ContainsKey(key))
+                    tripleFreq[key] = new Dictionary<byte, int>();
+
+                var dict = tripleFreq[key];
+                dict.TryAdd(current, 0);
+                dict[current]++;
+            }
         }
 
         var totalBytes = data.Length;
+        var totalPairs = totalBytes - 1;
+        var totalTriples = totalBytes - 2;
+
+        // HX
         var h1 = -singleByteFreq.Values.Sum(
             v =>
             {
@@ -181,10 +205,45 @@ public class HuffmanEncoder
             }
         );
 
+        // H(X|X)
+        double hXgivenX = 0;
+
+        foreach (var kvp in pairFreq)
+        {
+            var px = (double) kvp.Value.Values.Sum() / totalPairs;
+            double h = 0;
+
+            foreach (var count in kvp.Value.Values)
+            {
+                var p = (double) count / kvp.Value.Values.Sum();
+                h += -p * Math.Log2(p);
+            }
+
+            hXgivenX += px * h;
+        }
+
+        // H(X|XX)
+        double hXgivenXX = 0;
+
+        foreach (var kvp in tripleFreq)
+        {
+            var pxx = (double) kvp.Value.Values.Sum() / totalTriples;
+            double h = 0;
+
+            foreach (var count in kvp.Value.Values)
+            {
+                var p = (double) count / kvp.Value.Values.Sum();
+                h += -p * Math.Log2(p);
+            }
+
+            hXgivenXX += pxx * h;
+        }
+
         return new CompressionMetrics
         {
-            H1 = h1,
-            Hx = hx,
+            HX = h1,
+            HX_X = hXgivenX,
+            HX_XX = hXgivenXX,
             AvgBitsPerSymbol = (double) totalEncodedBits / totalBytes,
             InitialSizeBytes = totalBytes,
             CompressedSizeBytes = (totalEncodedBits + 7) / BitsInByte
@@ -204,9 +263,9 @@ public class HuffmanEncoder
 
         Console.WriteLine($"\nFile: {inputFile}");
         Console.WriteLine(Line('┌', '┬', '┐', '─'));
-        Console.WriteLine(Row("Entropy H(X)", metrics.H1.ToString(floatFormat)));
-        Console.WriteLine(Row("Entropy H(XX)", metrics.Hx.ToString(floatFormat)));
-        Console.WriteLine(Row("Entropy H(X|X)", metrics.ConditionalEntropy.ToString(floatFormat)));
+        Console.WriteLine(Row("Entropy H(X)", metrics.HX.ToString(floatFormat)));
+        Console.WriteLine(Row("Entropy H(X|X)", metrics.HX_X.ToString(floatFormat)));
+        Console.WriteLine(Row("Entropy H(X|XX)", metrics.HX_XX.ToString(floatFormat)));
         Console.WriteLine(Row("Avg bits/symbol", metrics.AvgBitsPerSymbol.ToString(floatFormat)));
         Console.WriteLine(Line('├', '┼', '┤', '─'));
         Console.WriteLine(Row("Initial size", metrics.InitialSizeBytes.Bytes().ToString()));
@@ -220,9 +279,9 @@ public class HuffmanEncoder
 
     private record CompressionMetrics
     {
-        public double H1 { get; init; }
-        public double Hx { get; init; }
-        public double ConditionalEntropy => Hx - H1;
+        public double HX { get; init; }
+        public double HX_X { get; init; }
+        public double HX_XX { get; init; }
         public double AvgBitsPerSymbol { get; init; }
         public int InitialSizeBytes { get; init; }
         public int CompressedSizeBytes { get; init; }
